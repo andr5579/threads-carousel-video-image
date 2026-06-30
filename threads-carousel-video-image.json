@@ -1,0 +1,912 @@
+{
+  "name": "SHOP_POSTS FOR THREADS Home_kits93",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            },
+            {
+              "triggerAtHour": 11
+            },
+            {
+              "triggerAtHour": 14
+            },
+            {
+              "triggerAtHour": 17
+            },
+            {
+              "triggerAtHour": 20
+            }
+          ]
+        }
+      },
+      "id": "d567c036-6b78-45a3-8c37-800cad93e3b9",
+      "name": "Every 2 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1936,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  finished: false,\n  product: 'berberine',\n  imageFolderId: '1LWKg0kxaNkEZCT4nTyqYXMJP-YqR7PSl',\n  videoFolderId: '1Bl35_c4huMKuX3zgO5z6HBeEGz2g0K3p'\n};"
+      },
+      "id": "ca273117-c5de-432e-811b-2f401bfb1c85",
+      "name": "Выбор товара по кругу",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wrPVIpQw--aly1qM7ev4_8WdzW2YrsJOaSofaz6ey8Y",
+          "mode": "list",
+          "cachedResultName": "POST TEXT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wrPVIpQw--aly1qM7ev4_8WdzW2YrsJOaSofaz6ey8Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.product.toUpperCase() }}",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "pending"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "94ab18ef-d7ea-4ec2-ad0f-18aff1c5ec8f",
+      "name": "Берем pending пост",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1440,
+        624
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ovQqagKOqF1fZZLb",
+          "name": "Google Sheets account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const product = $node['Выбор товара по кругу'].json.product;\nconst imageFolderId = $node['Выбор товара по кругу'].json.imageFolderId;\nconst videoFolderId = $node['Выбор товара по кругу'].json.videoFolderId;\n\nreturn {\n  ...($json),\n  product,\n  imageFolderId,\n  videoFolderId\n};"
+      },
+      "id": "9f74d213-9269-4813-b484-067e6f96b179",
+      "name": "Объединить данные",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.post_text }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "509297e8-2449-48ca-9838-28a943314c41",
+      "name": "Пост найден?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.videoFolderId }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "id": "b1116776-b59d-47dd-a5ff-0a26671c7c34",
+      "name": "Ищем видео",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -768,
+        336
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J2te7xRVlRoL0nDk",
+          "name": "Google Drive account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (!items || items.length === 0) throw new Error('Нет видео в папке');\nconst randomItem = items[Math.floor(Math.random() * items.length)];\nconst prevData = $node['Объединить данные'].json;\nreturn {\n  ...prevData,\n  videoId: randomItem.json.id,\n  videoName: randomItem.json.name\n};"
+      },
+      "id": "d6e49508-610a-4dfa-abcb-955ad6aa1c2c",
+      "name": "Случайное видео",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.imageFolderId }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "id": "55278cf8-7509-46ef-bd44-8b79cbb5064f",
+      "name": "Ищем картинки",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -384,
+        336
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J2te7xRVlRoL0nDk",
+          "name": "Google Drive account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nif (!items || items.length === 0) throw new Error('Нет картинок в папке');\nconst randomItem = items[Math.floor(Math.random() * items.length)];\nconst prevData = $node['Случайное видео'].json;\nreturn {\n  ...prevData,\n  imageId: randomItem.json.id,\n  imageName: randomItem.json.name\n};"
+      },
+      "id": "7e531b68-4970-478e-a517-bf138414b068",
+      "name": "Случайная картинка",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.videoId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "26fe64bc-7b60-4a05-88e5-54fd097eef9a",
+      "name": "Скачать видео",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        0,
+        336
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J2te7xRVlRoL0nDk",
+          "name": "Google Drive account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pixeldrain.com/api/file",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c4dc54cb-aee1-4f86-8d89-92ca3af1f446",
+      "name": "Upload видео Pixeldrain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        336
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "6pkmFovIrco85LvX",
+          "name": "PixelDrain API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const pixeldrainVideoId = $json.id;\nconst prevData = $node['Случайная картинка'].json;\nreturn {\n  ...prevData,\n  pixeldrainVideoId,\n  pixeldrainVideoUrl: 'https://pixeldrain.com/api/file/' + pixeldrainVideoId\n};"
+      },
+      "id": "8962dd5a-d814-4d88-85f5-b8896aceadce",
+      "name": "Сохранить ID видео",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        384,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.imageId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "53c301fa-add0-46d3-a896-f54fd3594ce8",
+      "name": "Скачать картинку",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        576,
+        336
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J2te7xRVlRoL0nDk",
+          "name": "Google Drive account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const pixeldrainImageId = $json.id;\nconst videoData = $node['Сохранить ID видео'].json;\nreturn {\n  pixeldrainVideoUrl: videoData.pixeldrainVideoUrl,\n  pixeldrainImageUrl: 'https://pixeldrain.com/api/file/' + pixeldrainImageId,\n  post_text: $node['Берем pending пост'].json.post_text,\n  product: $node['Выбор товара по кругу'].json.product\n};"
+      },
+      "id": "9293e0d2-1cdf-427b-ae0c-541c1b4ef4c2",
+      "name": "Подготовить данные",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ID/threads",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN"
+            },
+            {
+              "name": "media_type",
+              "value": "VIDEO"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $json.pixeldrainVideoUrl }}"
+            },
+            {
+              "name": "is_carousel_item",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64948152-1e7f-4ba2-8ce8-8299c1e63b16",
+      "name": "Threads Video Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const videoContainerId = $json.id;\nconst data = $node['Подготовить данные'].json;\nreturn {\n  ...data,\n  videoContainerId\n};"
+      },
+      "id": "2a7e067f-a7f2-4b7d-bb2f-2ee17256ee02",
+      "name": "Сохранить ID видео контейнера",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ID/threads",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN"
+            },
+            {
+              "name": "media_type",
+              "value": "IMAGE"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $('Upload an asset from file data').item.json.secure_url }}"
+            },
+            {
+              "name": "is_carousel_item",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5fd73d04-2b72-489a-865b-9ed4ab7c256a",
+      "name": "Threads Image Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -496,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const imageContainerId = $json.id;\nconst data = $node['Сохранить ID видео контейнера'].json;\nreturn {\n  videoContainerId: data.videoContainerId,\n  imageContainerId,\n  children: data.videoContainerId + ',' + imageContainerId,\n  post_text: data.post_text,\n  product: data.product\n};"
+      },
+      "id": "79bd73fd-76ca-4fb9-98c5-c819ba258ded",
+      "name": "Подготовить карусель",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "id": "6e2a4d83-11f1-4a6a-9c51-4fb2ecca5060",
+      "name": "Wait 60s видео",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        912
+      ],
+      "webhookId": "wait-video-hook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ID/threads",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN"
+            },
+            {
+              "name": "media_type",
+              "value": "CAROUSEL"
+            },
+            {
+              "name": "children",
+              "value": "={{ $json.children }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.post_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d123da5a-c39c-4b38-9145-d900248fad59",
+      "name": "Threads Carousel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "5c154c99-5f07-4dc8-aa6c-d90552c808d2",
+      "name": "Wait 30s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        912
+      ],
+      "webhookId": "wait-publish-hook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.threads.net/v1.0/YOUR_THREADS_ID/threads_publish",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "YOUR_THREADS_ACCESS_TOKEN"
+            },
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7bcd3b4-1733-4563-9e7d-e638c1b77b36",
+      "name": "Threads Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1wrPVIpQw--aly1qM7ev4_8WdzW2YrsJOaSofaz6ey8Y",
+          "mode": "list",
+          "cachedResultName": "POST TEXT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wrPVIpQw--aly1qM7ev4_8WdzW2YrsJOaSofaz6ey8Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $node['Выбор товара по кругу'].json.product.toUpperCase() }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_text": "={{ $node['Берем pending пост'].json.post_text }}",
+            "status": "posted"
+          },
+          "matchingColumns": [
+            "post_text"
+          ],
+          "schema": [
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18c084ec-0e53-4990-adad-0f0c4344c67a",
+      "name": "Update Status to Posted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        656,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ovQqagKOqF1fZZLb",
+          "name": "Google Sheets account evankov1988"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1702140122",
+        "text": "Все посты опубликованы THREADS AndyGo",
+        "additionalFields": {}
+      },
+      "id": "c395fa01-807e-4e78-8122-a5807e1c1e94",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        336
+      ],
+      "webhookId": "ab430fe7-5dfd-4760-a855-6390e1c8fb29",
+      "credentials": {
+        "telegramApi": {
+          "id": "CgGU5cJ5J8ez0UYU",
+          "name": "Telegram account @andr5579"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "uploadFile",
+        "additionalFieldsFile": {
+          "upload_preset": "n8n_upload"
+        }
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        912
+      ],
+      "id": "120ecc0e-4d5b-4e1b-a0a0-938dd07ba0a3",
+      "name": "Upload an asset from file data",
+      "credentials": {
+        "cloudinaryApi": {
+          "id": "EDY5MlnBaaRBKtmU",
+          "name": "Cloudinary account evankov1988"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 2 Hours": {
+      "main": [
+        [
+          {
+            "node": "Выбор товара по кругу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Выбор товара по кругу": {
+      "main": [
+        [
+          {
+            "node": "Берем pending пост",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Берем pending пост": {
+      "main": [
+        [
+          {
+            "node": "Объединить данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Объединить данные": {
+      "main": [
+        [
+          {
+            "node": "Пост найден?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Пост найден?": {
+      "main": [
+        [
+          {
+            "node": "Ищем видео",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ищем видео": {
+      "main": [
+        [
+          {
+            "node": "Случайное видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Случайное видео": {
+      "main": [
+        [
+          {
+            "node": "Ищем картинки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ищем картинки": {
+      "main": [
+        [
+          {
+            "node": "Случайная картинка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Случайная картинка": {
+      "main": [
+        [
+          {
+            "node": "Скачать видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Скачать видео": {
+      "main": [
+        [
+          {
+            "node": "Upload видео Pixeldrain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload видео Pixeldrain": {
+      "main": [
+        [
+          {
+            "node": "Сохранить ID видео",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Сохранить ID видео": {
+      "main": [
+        [
+          {
+            "node": "Скачать картинку",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Скачать картинку": {
+      "main": [
+        [
+          {
+            "node": "Upload an asset from file data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовить данные": {
+      "main": [
+        [
+          {
+            "node": "Threads Video Container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Threads Video Container": {
+      "main": [
+        [
+          {
+            "node": "Сохранить ID видео контейнера",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохранить ID видео контейнера": {
+      "main": [
+        [
+          {
+            "node": "Threads Image Container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Threads Image Container": {
+      "main": [
+        [
+          {
+            "node": "Подготовить карусель",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовить карусель": {
+      "main": [
+        [
+          {
+            "node": "Wait 60s видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 60s видео": {
+      "main": [
+        [
+          {
+            "node": "Threads Carousel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Threads Carousel": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s": {
+      "main": [
+        [
+          {
+            "node": "Threads Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Threads Publish": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload an asset from file data": {
+      "main": [
+        [
+          {
+            "node": "Подготовить данные",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "America/New_York",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "3df21449-c9a8-46d0-aed7-9f63a7342de6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5ac17c6d93363c48c9209501ea70a94368b8be11341024caa43dabb53eae1ec"
+  },
+  "nodeGroups": [],
+  "id": "aNyzDDpBr1ynqg9h",
+  "tags": []
+}
